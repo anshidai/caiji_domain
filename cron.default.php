@@ -35,6 +35,8 @@ $proxy_ip = array();
 require 'aizhan.php';
 $Aizhan =  new Aizhan();
 $Aizhan->allowProxy = true;
+$Aizhan->delay = 2000;
+$Aizhan->total = 1000;
 
 //采集代理ip
 if($Aizhan->allowProxy) {

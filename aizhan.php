@@ -8,144 +8,96 @@ header("Content-type:text/html; charset=utf-8");
 set_time_limit(0);
 
 class Aizhan {
-
+	
     protected $data;
+	
+	//页面抓取内容
     protected $content;
-    protected $errorMax = 5; //最大错误次数
-    protected $pagesize = 50;
-    protected $runCount = 300; //每次抓取域名最大数量
-    public $proxyIP = array(); //代理ip集合
-    protected $currProxyIp = ''; //当前正在使用代理ip
-    protected $currProxyPort = ''; //当前正在使用代理ip端口
-    public $allowProxy = false; //是否开启代理 默认不开启
-    
-    protected $baidu_sousuo = array(
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E6%9C%80%E6%96%B0vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=a541aIXMC2as8G8CCkWJP5QvVWLHZjIaXfM%2BV%2B3glULORtiOVGQO164WG49v4rE3kHiX&oq=%E8%BF%85%E9%9B%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%88%86%E4%BA%AB%E7%BD%91&rsv_pq=e9e52c9a0013e7bf&rsv_sug3=120&rsv_sug1=90&rsv_sug7=100&rsv_n=2&prefixsug=%E7%88%B1%E5%A5%87%E8%89%BA%E6%9C%80%E6%96%B0vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&inputT=29710&rsv_sug4=30364&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E9%BB%84%E9%87%91vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=cfaezyOsf6ZpZp35rI2g3DjTHe8LzQwEyOWhiMWKLnRUM24kU9VInRrJVgHs%2F%2Bkv36Ua&oq=%E7%88%B1%E5%A5%87%E8%89%BA%E6%9C%80%E6%96%B0vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=db9ae664001319e8&inputT=533&rsv_sug3=124&rsv_sug1=93&rsv_sug7=000&rsv_n=2&prefixsug=%E7%88%B1%E5%A5%87%E8%89%BA%E9%BB%84%E9%87%91vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&rsv_sug4=1097&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E5%8F%B7%E5%A4%A7%E5%85%A8vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=3a99m4iCsoXo94KrGk7lzRUssu36L53MfI%2FoRbmfqt0C8pUHYXOzs%2FshtnvJ7UyLWpfc&oq=%E7%88%B1%E5%A5%87%E8%89%BA%E9%BB%84%E9%87%91vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=9ddb4dd800124ded&inputT=440&rsv_sug3=128&rsv_sug1=96&rsv_sug7=000&rsv_n=2&prefixsug=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E5%8F%B7%E5%A4%A7%E5%85%A8vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&rsv_sug4=953&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BAvip%E5%85%8D%E8%B4%B9%E8%AF%95%E7%94%A8vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=252fskVjyKlW%2BVm5bonIzJPiOfvDq0RjfoRZc7ZqM5Z8ONeI7uPLjDU8xeAfTbpvxX%2FV&oq=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E5%8F%B7%E5%A4%A7%E5%85%A8vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=f1848456001759e7&inputT=569&rsv_sug3=132&rsv_sug1=99&rsv_sug7=000&rsv_n=2&rsv_sug4=1093&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%8D%E8%B4%B9vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=227eV7fVumaWIn86tp68Wx237PYJDshfDzCnRPuy3syMb0b%2Fivw7JPy5AcTLcrE2REhS&oq=%E7%88%B1%E5%A5%87%E8%89%BAvip%E5%85%8D%E8%B4%B9%E8%AF%95%E7%94%A8vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=90df419800188944&inputT=515&rsv_sug3=136&rsv_sug1=102&rsv_sug7=000&rsv_n=2&prefixsug=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%8D%E8%B4%B9vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&rsv_sug4=978&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=f017%2FLLRO7uDTqoSZv0T2VsAyCrVVpizYvY2im1EdTq5fyI3Mre6qq5C3i72RkaXBpfi&oq=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%8D%E8%B4%B9vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=8f05c6fa0017d201&inputT=458&rsv_sug3=140&rsv_sug1=105&rsv_sug7=000&rsv_n=2&prefixsug=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&rsv_sug4=937&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%AF%86%E7%A0%81vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=c870uXo5FnylXksL39trAVAxndBA24W31sHNpa9pU8CaeDQooSfjiDy7P6Os3Gjr3ffu&oq=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=e562a97100156c89&inputT=576&rsv_sug3=144&rsv_sug1=108&rsv_sug7=000&rsv_n=2&rsv_sug4=1126&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E4%BC%98%E9%85%B7vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=2a1fCCohXsUR%2BVl1koM235rOIu5V8PFUPNn5j9%2FSrCE5uu3pEhMNBewkrvZ9Q62QRrN7&oq=%E7%88%B1%E5%A5%87%E8%89%BA%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%AF%86%E7%A0%81vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=8089f04e0015123c&inputT=614&rsv_sug3=148&rsv_sug1=111&rsv_sug7=000&rsv_n=2&prefixsug=%E4%BC%98%E9%85%B7vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&rsv_sug4=1131&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E4%BC%98%E9%85%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=7651ZGG6G%2BVS8UrG0Jo9LQ%2BTRo%2Bh%2BDOnIPwYYnuJ5CJZqXabDA%2BUpdXNLFnrQ74B7gnT&oq=%E4%BC%98%E9%85%B7vip%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=86386e010012b2fd&inputT=493&rsv_sug3=152&rsv_sug1=114&rsv_sug7=000&rsv_n=2&rsv_sug4=1080&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E4%BC%98%E9%85%B7vip%E8%B4%A6%E5%8F%B7%E5%85%B1%E4%BA%ABvip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=afffnUh4hHx4iOQrbi8VO8oHD8qgMroaxb616ZGx6NJINeHbEFnzEsatmqJxCQpjpjem&oq=%E4%BC%98%E9%85%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=f2b9e8920014eacd&inputT=581&rsv_sug3=156&rsv_sug1=117&rsv_sug7=000&rsv_n=2&rsv_sug2=0&rsv_sug4=1105&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E4%BC%98%E9%85%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%B1%E4%BA%AB2016vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=299dAezj8qqSDpkahzez7vxO0AbN6QYDh3TD0B%2FFL%2FXsj5ebBUThHIh8v8Ecg2jAOMYB&oq=%E4%BC%98%E9%85%B7vip%E8%B4%A6%E5%8F%B7%E5%85%B1%E4%BA%ABvip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=963b4d240013eecb&inputT=495&rsv_sug3=160&rsv_sug1=120&rsv_sug7=000&rsv_n=2&rsv_sug4=1015&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E4%BC%98%E9%85%B7%E9%BB%84%E9%87%91%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%B1%E4%BA%ABvip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=a7fdNmCsydyUCRIb0L%2FhYW1%2BOOBeb%2Bk2QhhKtJy9okHOcuqgcsfcfhscdJSzQQ6jfR2v&oq=%E4%BC%98%E9%85%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%B1%E4%BA%AB2016vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=8fca61ee00129720&inputT=505&rsv_sug3=164&rsv_sug1=123&rsv_sug7=000&rsv_n=2&rsv_sug4=977&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E8%BF%85%E9%9B%B7%E7%99%BD%E9%87%91%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%88%86%E4%BA%ABvip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=19fe%2B3mY0DqsjQOTXcfy%2BcvKoZAlPJKTOA9sJV%2BRrt95LMV7sWUFTuTNH0O75ql5l%2FaT&oq=%E4%BC%98%E9%85%B7%E9%BB%84%E9%87%91%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%85%B1%E4%BA%ABvip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=db9ae66400133264&inputT=449&rsv_sug3=168&rsv_sug1=126&rsv_sug7=000&rsv_n=2&rsv_sug4=873&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E8%BF%85%E9%9B%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=c2a1JIo6lCQmaIoeA%2FGnpLisv5XnAsDnjfsG9pJdeBfWuDWPITaBHS8WVc3llIdZushD&oq=%E8%BF%85%E9%9B%B7%E7%99%BD%E9%87%91%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%88%86%E4%BA%ABvip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=82e591380012dda6&inputT=505&rsv_sug3=172&rsv_sug1=129&rsv_sug7=000&rsv_n=2&rsv_sug4=1035&rsv_sug=1',
-        'https://www.baidu.com/s?wd=%E8%BF%85%E9%9B%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%88%86%E4%BA%AB%E7%BD%91vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_spt=1&rsv_iqid=0x86710efb00134db9&issp=1&f=3&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=0&rsv_t=d609BuUdZ2zLwFo1lyHuV61k2GS1D7x5RQYCfTJZLtVjfrB6l9kD1SU690g9WeDwrLNY&oq=%E8%BF%85%E9%9B%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7vip%E7%99%BE%E5%A7%93%E7%BD%91&rsv_pq=904cae0100131f4e&inputT=503&rsv_sug3=176&rsv_sug1=132&rsv_sug7=000&rsv_n=2&prefixsug=%E8%BF%85%E9%9B%B7%E4%BC%9A%E5%91%98%E8%B4%A6%E5%8F%B7%E5%88%86%E4%BA%AB%E7%BD%91vip%E7%99%BE%E5%A7%93%E7%BD%91&rsp=0&rsv_sug4=1089&rsv_sug=1',
-    );
+	
+	//最大错误次数
+    protected $errorMax = 5; 
+	
+	//每次抓取域名最大数量
+    public $total = 300; 
+	
+	//代理ip集合
+    public $proxyIP = array(); 
+	
+	//当前正在使用代理ip
+    protected $currProxyIp = ''; 
+	
+	//当前正在使用代理ip端口
+    protected $currProxyPort = ''; 
+	
+	//是否开启代理 默认不开启
+    public $allowProxy = false; 
+	
+	//延时 毫秒
+	public $delay = 1000;
     
     public function __construct() {}
     
     public function init()
     {
-        
         //锁状态 0-允许操作， 1-已经有其他进程在使用 不允许操作
         $lock = file_get_contents(ROOTPATH.'lock.txt');
         if($lock == '1') {
             print_log("上一次任务还没结束");
             exit;   
         }
-        
-        $total = DB::result_first("SELECT count(*) FROM ".DB::table('cj_domain')." WHERE status=0");
-        if($total) {
-            writeLock(1);
-            $formax = ceil($total/$this->pagesize);
-            $run = 0;
-            for($i=0; $i<=$formax; $i++) {
-                $limit = ($i-1)*$this->pagesize.','.$this->pagesize;
-                $query = DB::query("SELECT domain FROM ".DB::table('cj_domain')." WHERE status=0 order by addtime limit {$limit}");
-                while($row = DB::fetch($query)) { 
-                    if($run >= $this->runCount) {
-                        break;
-                    }
-                    
-                    if($this->allowProxy && !$this->proxyIP) {
-                        writeLock(0);
-                        print_log("当前没有可用的代理ip");
-                        $this->delDomain();
-                        exit;
-                    }
-                    
-                    $this->data['domain'] = rtrim($row['domain'], '/');
-                    print_log("------------ 开始抓取域名 {$this->data['domain']} ------------");
+		writeLock(1);
+		$query = DB::query("SELECT domain FROM ".DB::table('cj_domain')." WHERE status=0 order by addtime limit {$this->total}");
+		while($row = DB::fetch($query)) { 
+			if($this->allowProxy) {
+				if(!$this->proxyIP) {
+					writeLock(0);
+					print_log("当前没有可用的代理ip");
+					$this->delDomain();
+					exit;
+				}
+				$this->changeProxy();
+			}
+			
+			$this->data['domain'] = rtrim($row['domain'], '/');
+			print_log("------------ 开始抓取域名 {$this->data['domain']} ------------");
 
-                    $header[] = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"; 
-                    $header[] = "Accept-Encoding: gzip, deflate"; 
-                    $header[] = "Accept-Language: zh-CN,zh;q=0.8"; 
-                    $header[] = "Cache-Control: max-age=0"; 
-                    $header[] = "Connection: keep-alive"; 
-                    $header[] = "Host: www.aizhan.com"; 
-                    $header[] = "Referer: http://www.aizhan.com/cha/{$this->data['domain']}"; 
-                    //$header[] = "Referer: {$pageurl}"; 
-                    $header[] = "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0";
-                    
-                    $cookie = 'update=1;siteallSite={$domain};baidurankSite={$domain};defaultSiteState=1;{"{$domain}":true}';
-                    $cookie = str_replace('{$domain}', $row['domain'], $cookie);
-                    
-                    $tem_content = curl_http('http://www.aizhan.com/cha/'.$this->data['domain'], $header, array('ip'=>$this->currProxyIp, 'port'=>$this->currProxyPort), true);
-                    $this->content = $tem_content['content'];
-                    $httpcode = $tem_content['httpcode'];
-                    unset($tem_content);
-                    
-                    /* 临时加入百度搜索词 开始 */
-                    //$baidu_sousuo_url = $this->getRandArr($this->baidu_sousuo, 1);
-                    //curl_http($baidu_sousuo_url);
-                    /* 临时加入百度搜索词 结束 */
-
-                    if($this->content && $httpcode == '200') {
-                        //file_put_contents('/home/libaoan/dd.txt', $this->content);
-                        //exit;
-                        
-                        if(strpos($this->content, '查询太频繁了，休息一下吧') || strpos($this->content, '<h1>400 Bad Request</h1>') || strpos($this->content, '<title>404 Not Found</title>') || strpos($this->content, '500 Internal Server Error') || strpos($this->content,'301 Moved Permanently')) {
-                            if($this->allowProxy) {
-                                
-                                $this->cjSiteUrl();
-                                $this->addDomain();
-                                
-                                print_log("************ 查询太频繁或301提示 正在切换代理 ***********");
-                                $this->changeProxy();
-                                $run++;
-                                continue;
-                            }else {
-                                writeLock(0);
-                                
-                                $this->cjSiteUrl();
-                                $this->addDomain();
-                                $this->delDomain();
-                                //echo $this->content;
-                                print_log("查询太频繁或301提示 暂停采集");
-                                exit;
-                            }     
-                        }else {
-                            $this->cjSiteUrl();
-                            $this->updateDomain();
-                            $this->addDomain();    
-                        } 
-                    }else {
-                         if($this->allowProxy) {
-                             print_log("抓取域名内容失败 正在切换代理");
-                            $this->changeProxy();
-                            $run++;
-                            continue;   
-                        }else {
-                            print_log("抓取域名内容失败 {$this->data['domain']}");
-                        }
-                        
-                    }
-                    $this->data = array();
-                    $this->content = '';
-                    $run++;
-                    
-                    $this->allowProxy? sleep(10): sleep(10);
-                }
-            }
-            $this->delDomain();    
-        } 
+			$header[] = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"; 
+			$header[] = "Accept-Encoding: gzip, deflate"; 
+			$header[] = "Accept-Language: zh-CN,zh;q=0.8"; 
+			$header[] = "Cache-Control: max-age=0"; 
+			$header[] = "Connection: keep-alive"; 
+			$header[] = "Host: www.aizhan.com"; 
+			$header[] = "Referer: http://www.aizhan.com/cha/{$this->data['domain']}"; 
+			//$header[] = "Referer: {$pageurl}"; 
+			$header[] = "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0";
+			
+			$cookie = 'update=1;siteallSite={$domain};baidurankSite={$domain};defaultSiteState=1;{"{$domain}":true}';
+			$cookie = str_replace('{$domain}', $row['domain'], $cookie);
+			
+			$tem_content = curl_http('http://www.aizhan.com/cha/'.$this->data['domain'], $header, array('ip'=>$this->currProxyIp, 'port'=>$this->currProxyPort), true);
+			$this->content = $tem_content['content'];
+			$httpcode = $tem_content['httpcode'];
+			unset($tem_content);
+			
+			if(empty($this->content) || $httpcode != '200') {
+				print_log("抓取域名内容失败 {$this->data['domain']}");
+				continue; 
+			}else if(strpos($this->content, '查询太频繁了，休息一下吧') || strpos($this->content, '<h1>400 Bad Request</h1>') || strpos($this->content, '<title>404 Not Found</title>') || strpos($this->content, '500 Internal Server Error') || strpos($this->content,'301 Moved Permanently')) {
+				print_log("************ 查询太频繁或301提示 **********");
+				continue;
+			}
+			$this->cjSiteUrl();
+			$this->addDomain();
+		
+			$this->data = array();
+			$this->content = '';
+			
+			if($this->delay) {
+				usleep($this->delay * 1000);
+			}
+		}
+		$this->delDomain();    
         writeLock(0);             
-        
     }
 
     
