@@ -14,6 +14,7 @@ require 'mysql.class.php';
 require 'http_proxy.php';
 
 define('ROOTPATH', substr(__FILE__, 0 , -8));
+define('IS_WIN',strstr(PHP_OS, 'WIN') ? 1 : 0 );
 
 //数据库配置
 $config['db'][1]['dbhost'] = 'localhost';        
@@ -45,7 +46,7 @@ if($Aizhan->allowProxy) {
 
     $proxy_ip = array_merge($proxy_ip_1, $proxy_ip_2);
     $proxy_ip = filter_proxy_ips($proxy_ip, 2);
-    print_log("采集代理ip完成 记录总数: ".count($proxy_ip));
+    $Aizhan->writeLog("采集代理ip完成 记录总数: ".count($proxy_ip));
 }
 $Aizhan->proxyIP = $proxy_ip;
 

@@ -32,6 +32,8 @@ class Aizhan {
 	//是否开启代理 默认不开启
     public $allowProxy = false; 
 	
+	public $logfile = '';
+	
 	//延时 毫秒
 	public $delay = 1000;
     
@@ -42,7 +44,7 @@ class Aizhan {
         //锁状态 0-允许操作， 1-已经有其他进程在使用 不允许操作
         $lock = file_get_contents(ROOTPATH.'lock.txt');
         if($lock == '1') {
-            print_log("上一次任务还没结束");
+            $this->writeLog("上一次任务还没结束");
             exit;   
         }
 		writeLock(1);
@@ -51,7 +53,7 @@ class Aizhan {
 			if($this->allowProxy) {
 				if(!$this->proxyIP) {
 					writeLock(0);
-					print_log("当前没有可用的代理ip");
+					$this->writeLog("当前没有可用的代理ip");
 					$this->delDomain();
 					exit;
 				}
@@ -59,7 +61,7 @@ class Aizhan {
 			}
 			
 			$this->data['domain'] = rtrim($row['domain'], '/');
-			print_log("------------ 开始抓取域名 {$this->data['domain']} ------------");
+			$this->writeLog("------------ 开始抓取域名 {$this->data['domain']} ------------");
 
 			$header[] = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"; 
 			$header[] = "Accept-Encoding: gzip, deflate"; 
@@ -80,10 +82,10 @@ class Aizhan {
 			unset($tem_content);
 			
 			if(empty($this->content) || $httpcode != '200') {
-				print_log("抓取域名内容失败 {$this->data['domain']}");
+				$this->writeLog("抓取域名内容失败 {$this->data['domain']}");
 				continue; 
 			}else if(strpos($this->content, '查询太频繁了，休息一下吧') || strpos($this->content, '<h1>400 Bad Request</h1>') || strpos($this->content, '<title>404 Not Found</title>') || strpos($this->content, '500 Internal Server Error') || strpos($this->content,'301 Moved Permanently')) {
-				print_log("************ 查询太频繁或301提示 **********");
+				$this->writeLog("************ 查询太频繁或301提示 **********");
 				continue;
 			}
 			$this->cjSiteUrl();
@@ -118,7 +120,7 @@ class Aizhan {
         foreach($this->proxyIP as $val) {
             $this->currProxyIp = $val['ip'];
             $this->currProxyPort = $val['port'];
-            print_log("当前代理ip {$this->currProxyIp}:{$this->currProxyPort}  剩余代理IP数量：".count($this->proxyIP));
+            $this->writeLog("当前代理ip {$this->currProxyIp}:{$this->currProxyPort}  剩余代理IP数量：".count($this->proxyIP));
             break;
         }
         return true;
@@ -235,7 +237,7 @@ class Aizhan {
             $values = rtrim($values, ',');
             if($values) {
                 DB::query("INSERT INTO ".DB::table('cj_domain')." (domain, addtime) VALUES {$values}");
-                print_log("新增加域名 {$insert_domain}");
+                $this->writeLog("新增加域名 {$insert_domain}");
             }
         }
     }
@@ -296,7 +298,7 @@ class Aizhan {
         $setsql = rtrim($setsql, ',');
         
         DB::query("update ".DB::table('cj_domain')." SET {$setsql} WHERE domain='{$this->data['domain']}'");
-        print_log("更新域名 {$this->data['domain']}   注册时间".$this->data['creatdate']);
+        $this->writeLog("更新域名 {$this->data['domain']}   注册时间".$this->data['creatdate']);
     }
     
     protected function updaetErrorNum()
@@ -336,7 +338,7 @@ class Aizhan {
                 $values = rtrim($values, ',');
                 if($values) {
                     DB::query("INSERT INTO ".DB::table('history_domain')." (domain, addtime) VALUES {$values}");
-                    print_log("不符合条件域名保存到历史表 {$insert_domain}");
+                    $this->writeLog("不符合条件域名保存到历史表 {$insert_domain}");
                 }
             }
             /*** 将不符合域名保存到历史表 end ***/
@@ -344,7 +346,7 @@ class Aizhan {
             //域名主表删除不符合要求的记录
             DB::query("DELETE FROM ".DB::table('cj_domain')." WHERE domain in({$delete_domain})");
             
-            print_log("delete domain");
+            $this->writeLog("delete domain");
             
         }
     }
@@ -399,6 +401,16 @@ class Aizhan {
             $data[] = $arr[$rand_keys[$i]];  
         }
         return $data;
+    }
+	
+	public function writeLog($msg = '')
+    {
+        $msg = date('Y-m-d H:i:s')." {$msg}\n";
+		if($this->logfile) {
+			file_put_contents($this->logfile, $msg, FILE_APPEND);    
+		}else {
+			echo $msg;
+		}
     }
 
     function __destruct() {}
